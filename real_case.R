@@ -12,13 +12,11 @@ bim[,5:6]=map[,4:5]
 write.table(bim,"HDRA-G6-4-RDP1-RDP2-NIAS/HDRA-G6-4-RDP1-RDP2-NIAS.bim",quote=F,row.names = F,col.names = F)
 
 #convert PLINK format to VCF format
-system("./plink2 --bfile HDRA-G6-4-RDP1-RDP2-NIAS/HDRA-G6-4-RDP1-RDP2-NIAS --export vcf --out rice")
+system("./blink --file HDRA-G6-4-RDP1-RDP2-NIAS/HDRA-G6-4-RDP1-RDP2-NIAS --plink  --compress --noimp --out rice")
+system("./blink --file rice --uvcf --recode --out rice")
 
 #run beagle5 to impute missing genotype. beagle5 could be downloaded from https://faculty.washington.edu/browning/beagle/beagle.html
 system("java -Xmx20000m -jar beagle.jar gt=rice.vcf out=test")
-
-#convert imputed data to sample major PLINK text format
-system("./plink2 --vcf test.vcf.gz --export A --out rice")
 
 #create txt file
 zlines <- readLines("HDRA-G6-4-RDP1-RDP2-NIAS/HDRA-G6-4-RDP1-RDP2-NIAS.fam")
@@ -28,7 +26,7 @@ writeLines(zlines,"rice.txt")
 
 system("./blink --file test --vcf --compress --out rice")
 system("./blink --file rice --hapmap --recode --out rice")
-system("awk '{print $2}' rice.raw | awk -F '_' '{print $1}' > ID.txt")
+system("awk '{print $2}' rice.txt > ID.txt")
 
 #load SNP data, map, and phenotype
 myGM=read.table("HDRA-G6-4-RDP1-RDP2-NIAS/HDRA-G6-4-RDP1-RDP2-NIAS.bim",head=F)[,c(2,1,4)]
@@ -44,7 +42,7 @@ myG=read.table("rice.hmp",head=T,check.names = F)
 trait[,2]=paste(trait[,2],trait[,3],sep='_')
 myY=trait[,c(2,12)]
 
-#run blink via GAPIT
+#Run blink R version via GAPIT
 source("http://zzlab.net/GAPIT/gapit_functions.txt")
 myGAPIT=GAPIT(Y=myY,G=myG,PCA.total=3,model="BLINK")
 
